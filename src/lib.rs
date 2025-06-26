@@ -13,7 +13,7 @@ impl Guest for Component {
             .set_header("content-type", "text/html")
             .set_status_code(200)
             .set_body(body);
-        
+
         builder.build(resp);
     }
 }

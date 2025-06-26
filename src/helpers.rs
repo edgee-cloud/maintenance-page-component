@@ -1,5 +1,5 @@
-use crate::world::bindings::wasi::http::types::{Fields, OutgoingBody, OutgoingResponse};
 use crate::world::bindings::exports::wasi::http::incoming_handler::ResponseOutparam;
+use crate::world::bindings::wasi::http::types::{Fields, OutgoingBody, OutgoingResponse};
 
 pub struct ResponseBuilder {
     headers: Fields,
