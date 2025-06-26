@@ -1,0 +1,18 @@
+manifest-version = 1
+
+[component]
+name = "Maintenance Page"
+version = "1.0.0"
+
+category = "edge-function"
+subcategory = "wasm-function"
+description = "Edge function component to show a simple maintenance page under the specified path."
+documentation = "https://github.com/edgee-cloud/maintenance-page-component"
+repository = "https://github.com/edgee-cloud/maintenance-page-component"
+language = "Rust"
+wit-version = "1.0.0"
+icon-path = "maintenance.png"
+
+[component.build]
+command = "cargo build --target wasm32-wasip2 --release --target-dir ./target && mv ./target/wasm32-wasip2/release/maintenance_page_component.wasm ./maintenance.wasm"
+output_path = "maintenance.wasm"
