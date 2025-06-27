@@ -8,12 +8,7 @@ use world::bindings::Component;
 impl Guest for Component {
     fn handle(_req: IncomingRequest, resp: ResponseOutparam) {
         let body = include_str!("maintenance.html");
-        let mut builder = helpers::ResponseBuilder::new();
-        builder
-            .set_header("content-type", "text/html")
-            .set_status_code(200)
-            .set_body(body);
-
-        builder.build(resp);
+        let response = helpers::build_response_html(body, 200);
+        response.send(resp);
     }
 }

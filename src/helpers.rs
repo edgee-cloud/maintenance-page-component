@@ -1,5 +1,9 @@
 use crate::world::bindings::exports::wasi::http::incoming_handler::ResponseOutparam;
-use crate::world::bindings::wasi::http::types::{Fields, OutgoingBody, OutgoingResponse};
+use crate::world::bindings::wasi::http::types::{
+    Fields, IncomingRequest, OutgoingBody, OutgoingResponse,
+};
+use crate::world::bindings::wasi::io::streams::StreamError;
+use std::collections::HashMap;
 
 pub struct ResponseBuilder {
     headers: Fields,
@@ -39,21 +43,92 @@ impl ResponseBuilder {
         self
     }
 
-    pub fn build(self, resp: ResponseOutparam) {
+    pub fn send(self, resp: ResponseOutparam) {
         let resp_tx = OutgoingResponse::new(self.headers);
         let _ = resp_tx.set_status_code(self.status_code);
 
         let body = resp_tx.body().unwrap();
         ResponseOutparam::set(resp, Ok(resp_tx));
         let stream = body.write().unwrap();
-
-        if let Some(body_content) = &self.body_content {
-            stream
-                .blocking_write_and_flush(body_content.as_bytes())
-                .unwrap();
+        if let Some(body_content) = self.body_content {
+            stream.write(body_content.as_bytes()).unwrap();
         }
-
         drop(stream);
         let _ = OutgoingBody::finish(body, None);
     }
+}
+
+#[allow(dead_code)]
+pub fn parse_headers(headers: &Fields) -> HashMap<String, Vec<String>> {
+    let mut output: HashMap<String, Vec<String>> = HashMap::new();
+    for (header_name, header_value) in headers.entries() {
+        let header_name = header_name.to_string();
+        let header_value = String::from_utf8_lossy(&header_value).to_string();
+        output
+            .entry(header_name.clone())
+            .or_default()
+            .push(header_value);
+    }
+
+    output
+}
+
+#[allow(dead_code)]
+pub fn parse_body(req: IncomingRequest) -> Result<Vec<u8>, String> {
+    let mut request_body = Vec::new();
+    let stream = match req.consume() {
+        Ok(stream) => stream,
+        Err(_e) => {
+            return Err("Failed to consume request stream".to_string());
+        }
+    };
+    let stream = match stream.stream() {
+        Ok(stream) => stream,
+        Err(_e) => {
+            return Err("Failed to get request stream: ".to_string());
+        }
+    };
+
+    loop {
+        match stream.read(4096) {
+            Ok(chunk) => {
+                if chunk.is_empty() {
+                    break;
+                }
+                request_body.extend_from_slice(&chunk);
+            }
+            Err(StreamError::Closed) => {
+                // Stream is closed, we can stop reading
+                break;
+            }
+            Err(e) => {
+                return Err(format!("Failed to read from request stream: {e}"));
+            }
+        }
+    }
+    Ok(request_body)
+}
+
+pub fn build_response(body: &str, status_code: u16, content_type: &str) -> ResponseBuilder {
+    let mut builder = ResponseBuilder::new();
+    builder
+        .set_header("content-type", content_type)
+        .set_status_code(status_code)
+        .set_body(body);
+    builder
+}
+
+pub fn build_response_html(body: &str, status_code: u16) -> ResponseBuilder {
+    build_response(body, status_code, "text/html; charset=utf-8")
+}
+
+#[allow(dead_code)]
+pub fn build_response_json(body: &str, status_code: u16) -> ResponseBuilder {
+    build_response(body, status_code, "application/json")
+}
+
+#[allow(dead_code)]
+pub fn build_response_json_error(message: &str, status_code: u16) -> ResponseBuilder {
+    let body = format!("{{\"error\": \"{message}\"}}");
+    build_response_json(&body, status_code)
 }
