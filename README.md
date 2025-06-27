@@ -28,7 +28,7 @@ also map it to specific sub-paths.
 3. Add the following configuration to your `edgee.toml`:
 
 ```toml
-[[destinations.data_collection]]
+[[components.edge_functions]]
 id = "maintenance"
 file = "/var/edgee/components/maintenance.wasm"
 settings.edgee_path = "/"
