@@ -31,8 +31,10 @@ also map it to specific sub-paths.
 [[components.edge_functions]]
 id = "maintenance"
 file = "/var/edgee/components/maintenance.wasm"
-settings.edgee_path = "/"
+settings.edgee_path = "/path" # exact match
+settings.edgee_path_prefix = "/prefix" # will match /prefix/anything
 ```
+Note that either `edgee_path` or `edgee_path_prefix` must be set, but not both.
 
 ## Development
 
