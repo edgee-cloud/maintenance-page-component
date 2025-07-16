@@ -14,5 +14,5 @@ wit-version = "1.0.0"
 icon-path = "maintenance.png"
 
 [component.build]
-command = "cargo build --target wasm32-wasip2 --release --target-dir ./target && mv ./target/wasm32-wasip2/release/maintenance_page_component.wasm ./maintenance.wasm"
+command = "cargo build --target wasm32-wasip2 --release --target-dir ./target && rm -f ./maintenance.wasm && mv ./target/wasm32-wasip2/release/maintenance_page_component.wasm ./maintenance.wasm"
 output_path = "maintenance.wasm"
